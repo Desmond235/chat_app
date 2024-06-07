@@ -19,9 +19,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   var _isLogin = true;
   var _isAuthenticating = false;
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-
+  bool showPassword = true;
   final _formKey = GlobalKey<FormState>();
 
   String _enteredEmail = '';
@@ -50,7 +48,7 @@ class _AuthScreenState extends State<AuthScreen> {
         final userCredentials = await _firebase.createUserWithEmailAndPassword(
             email: _enteredEmail, password: _enteredPassword);
 
-        // uploading an image
+        // uploading user's image
         final storageRef = FirebaseStorage.instance
             .ref()
             .child('user_images')
@@ -59,16 +57,16 @@ class _AuthScreenState extends State<AuthScreen> {
         await storageRef.putFile(_selectedImage!);
         final imageUrl = await storageRef.getDownloadURL();
 
-        // firestore
-       await FirebaseFirestore.instance
+        // send user credentials to firebase_firestore
+        await FirebaseFirestore.instance
             .collection('users')
             .doc(userCredentials.user!.uid)
             .set({
-              'username' :_enteredUsername,
-              'email' : _enteredEmail,
-              'imageUrl' : imageUrl,
-              'uid' : userCredentials.user!.uid
-            });
+          'username': _enteredUsername,
+          'email': _enteredEmail,
+          'imageUrl': imageUrl,
+          'uid': userCredentials.user!.uid
+        });
       }
     } on FirebaseAuthException catch (error) {
       if (!mounted) {
@@ -122,87 +120,91 @@ class _AuthScreenState extends State<AuthScreen> {
                                   _selectedImage = pickedImage;
                                 },
                               ),
-                           
-                              // Email address
+
+                            // Email address
+                            TextFormField(
+                              autocorrect: false,
+                              textCapitalization: TextCapitalization.none,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: const InputDecoration(
+                                  labelText: "Email Address"),
+                              validator: (value) {
+                                if (value == null ||
+                                    value.trim().isEmpty ||
+                                    !RegExp(r'\S\@\S+\.\S',
+                                            caseSensitive: false)
+                                        .hasMatch(value)) {
+                                  return 'Please enter a valid email address';
+                                }
+                                return null;
+                              },
+                              onSaved: (newValue) {
+                                _enteredEmail = newValue!;
+                              },
+                            ),
+
+                            // username
+                            if (!_isLogin)
                               TextFormField(
-                                autocorrect: false,
-                                controller: emailController,
-                                textCapitalization: TextCapitalization.none,
-                                keyboardType: TextInputType.emailAddress,
-                                decoration: const InputDecoration(
-                                    labelText: "Email Address"),
                                 validator: (value) {
                                   if (value == null ||
-                                      value.trim().isEmpty ||
-                                      !RegExp(r'\S\@\S+\.\S',
-                                              caseSensitive: false)
-                                          .hasMatch(value)) {
-                                    return 'Please enter a valid email address';
-                                  }
-                                  return null;
-                                },
-                                onSaved: (newValue) {
-                                  _enteredEmail = newValue!;
-                                },
-                              ),
-
-                              // username
-                              if(!_isLogin)
-                              TextFormField(
-                                validator: (value) {
-                                  if (value == null || value.isEmpty || value.trim().length < 4) {
+                                      value.isEmpty ||
+                                      value.trim().length < 4) {
                                     return 'Please enter at least four characters';
                                   }
                                   return null;
                                 },
                                 enableSuggestions: false,
                                 decoration: const InputDecoration(
-                                  labelText: 'Username'
-                                ),
-
-                                onSaved: (newValue){
+                                    labelText: 'Username'),
+                                onSaved: (newValue) {
                                   _enteredUsername = newValue!;
                                 },
                               ),
-
-                              //password
-                              TextFormField(
-                                controller: passwordController,
-                                obscureText: true,
-                                decoration: const InputDecoration(
-                                  labelText: "Password",
-                                ),
-                                validator: (value) {
-                                  if (value == null ||
-                                      value.trim().length < 5 ||
-                                      value.trim().isEmpty) {
-                                    return 'Password must be at least 6 characters';
-                                  }
-                                  return null;
-                                },
-                                onSaved: (newValue) {
-                                  _enteredPassword = newValue!;
-                                },
+                            //password
+                            TextFormField(
+                              obscureText:  showPassword ? true : false ,
+                              decoration: InputDecoration(
+                                suffixIcon: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        showPassword = !showPassword;
+                                      });
+                                    },
+                                    icon: Icon(showPassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined)),
+                                labelText: "Password",
                               ),
+                              validator: (value) {
+                                if (value == null ||
+                                    value.trim().length < 5 ||
+                                    value.trim().isEmpty) {
+                                  return 'Password must be at least 6 characters';
+                                }
+                                return null;
+                              },
+                              onSaved: (newValue) {
+                                _enteredPassword = newValue!;
+                              },
+                            ),
                             const SizedBox(height: 12),
 
-                            // show circular progress bar when in  authenication mode
-                             if (_isAuthenticating)
+                            // show circular progress bar when in  authentication mode
+                            if (_isAuthenticating)
                               const CircularProgressIndicator(),
 
-                              // login / signup button
-                              if(!_isAuthenticating)
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer,
+                            // login / signup button
+                            if (!_isAuthenticating)
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                                ),
+                                onPressed: _submit,
+                                child: Text(_isLogin ? 'Login' : 'Signup'),
                               ),
-                              onPressed: () {
-                                _submit();
-                              },
-                              child: Text(_isLogin ? 'Login' : 'Signup'),
-                            ),
                             TextButton(
                               onPressed: () {
                                 setState(() {
