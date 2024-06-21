@@ -12,7 +12,7 @@ class ChatMessages extends StatelessWidget {
     final authenticatedUser = FirebaseAuth.instance.currentUser!;
     return KeyboardDismissOnTap(
       child: StreamBuilder(
-          // listen for chnages
+          // listen for changes
           stream: FirebaseFirestore.instance
               .collection('messages')
               .orderBy('time', descending: true)

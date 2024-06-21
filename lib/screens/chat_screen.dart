@@ -1,11 +1,32 @@
 import 'package:chat_app/screens/chat_messages.dart';
 import 'package:chat_app/screens/new_messages.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+
+// set up push notifications
+  void setUpNotifications() async{
+    final fcm = FirebaseMessaging.instance;
+
+    await fcm.requestPermission(provisional: true);
+
+   fcm.subscribeToTopic('chat');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setUpNotifications();
+  }
   void showAlertDialog(BuildContext context) {
     showDialog(
         context: context,
@@ -59,7 +80,12 @@ class ChatScreen extends StatelessWidget {
           ],
         ),
         body: const Column(
-          children: [Expanded(child: ChatMessages()), NewMessage()],
+          children: [
+            Expanded(
+              child: ChatMessages(),
+            ),
+            NewMessage(),
+          ],
         ));
   }
 }

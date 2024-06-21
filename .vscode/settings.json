@@ -4,6 +4,19 @@
         "scrollbar.shadow": "#00000000"
     },
     "cSpell.words": [
-        "appspot"
-    ]
+        "appspot",
+        "ARGB",
+        "multilined",
+        "autocorrect",
+        "codetour",
+        "Cwsag",
+        "firebaseapp",
+        "firestore",
+        "matchtext",
+        "Monokai",
+        "signup",
+        "tabnine",
+        "unfocus"
+    ],
+    "workbench.colorTheme": "Tokyo Night Storm"
 }
